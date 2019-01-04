@@ -1,0 +1,79 @@
+---
+title: "KyleSha_L09_assignment"
+author: "Kyle Sha"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    highlight: tango
+    df_print: kable
+  html_document:
+    df_print: paged
+geometry: margin=0.5in
+fontsize: 10pt
+usepackage: framed, xcolor, courier
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, results = TRUE, tidy = TRUE, fig.align = "center")
+
+library(bnlearn)
+options(digits = 3, knitr.table.format = "latex")
+setwd("~/")
+```
+
+
+```{r A}
+n <- "[M][S][B][H][C][S|M][B|M][C|S][H|B][C|B]"
+net = model2network(n,ordering = c('S','C','H','B','M'))
+plot(net)
+
+cptM <- matrix(c(0.9, 0.1), ncol = 2, dimnames = list(NULL, c("TRUE", "FALSE")))
+cptS <- matrix(c(0.2, 0.8, 0.05, 0.95), ncol=2, dimnames = list(c("TRUE", "FALSE"), c("TRUE", "FALSE")))
+cptB <- matrix(c(0.8, 0.2, 0.2, 0.8), ncol=2, dimnames = list(c("TRUE", "FALSE"), c("TRUE", "FALSE")))
+cptH <- matrix(c(0.8, 0.2, 0.6, 0.4), ncol=2, dimnames = list(c("TRUE", "FALSE"), c("TRUE", "FALSE")))
+cptC <- c(0.8, 0.2, 0.8, 0.2, 0.8, 0.2, 0.05, 0.95)
+dim(cptC) <- c(2, 2, 2)
+dimnames(cptC) <- list('C'=c("TRUE", "FALSE"), 'S'=c("TRUE", "FALSE"), 'B'=c("TRUE", "FALSE"))
+
+dfit = custom.fit(net, dist = list(M=cptM, S=cptS, B=cptB, H=cptH, C=cptC))
+```
+
+## Q1. Given that the person has a Severe Headache, what is the probability of Metastatic Cancer?
+
+```{r Q1}
+# ANSWER Q1: P(M=T|H=T) = 91%
+Q1 <- cpquery(fitted = dfit, n = 1e6, event = M=="TRUE", evidence = H=="TRUE")
+```
+\vspace{3mm}\begin{leftbar}\textsf{\textbf{ANSWER Q1}\\
+$p(M=T|H=T) = 91\%$
+}\end{leftbar}\vspace{5mm}
+
+
+
+## Q2. If person does not have a Metastatic Cancer, what is the probability they have Coma?
+```{r Q2}
+# ANSWER Q2: P(C=T|M=F) = 23%
+Q2 <- cpquery(fitted = dfit, n = 1e6, event = C=="TRUE", evidence = M=="FALSE")
+```
+\vspace{3mm}\begin{leftbar}\textsf{\textbf{ANSWER Q2}\\
+$p(C=T|M=F) = 23\%$
+}\end{leftbar}\vspace{5mm}
+
+
+## Q3. Given that the person has a Severe Headache, what is the probability of Increased total serum calcium?
+```{r Q3}
+# ANSWER Q3: P(S=T|H=T) = 19%
+Q3 <- cpquery(fitted = dfit, n = 1e6, event = S=="TRUE", evidence = H=="TRUE")
+```
+\vspace{3mm}\begin{leftbar}\textsf{\textbf{ANSWER Q3}\\
+$p(S=T|H=T) = 19\%$
+}\end{leftbar}\vspace{5mm}
+
+
+## Q4. Research has shown that smoking results in Metastatic Cancer 30% of the time. Given this information, update the network (just show how you would draw the new arrow(s)). Draw conditional probability table for Metastatic Cancer, assuming that prior probabilities P(S=T) = 20% and P(M=T) = 10% (i.e. do not use P(M=T) = 0.9 or R in this question).
+```{r Q4, fig.width=4, fig.height=4, echo=FALSE}
+knitr::include_graphics("~/Picture1.png")
+```
+
+

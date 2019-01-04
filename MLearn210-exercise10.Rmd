@@ -1,0 +1,126 @@
+---
+title: "KyleSha_L10_assignment"
+author: "Kyle Sha"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    highlight: tango
+    df_print: kable
+  html_document:
+    df_print: paged
+geometry: margin=0.5in
+fontsize: 10pt
+usepackage: framed, xcolor, courier
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, results = TRUE, tidy = TRUE, fig.align = "center")
+
+options(digits = 3, knitr.table.format = "latex")
+setwd("~/")
+
+library(tidyverse)
+library(magrittr)
+library(kableExtra)
+```
+
+
+```{r init, results=FALSE, fig.width=6, fig.height=6}
+library("dbscan")
+head(iris)
+str(iris)
+plot(iris)
+
+# Do not use the outcome label (species name) in clustering
+iris.m <- as.matrix(iris[,1:4])
+
+# Make row.names pretty for easy debugging
+row.names(iris.m) <- paste(row.names(iris),iris$Species)
+speciesLabel <- stringr::str_extract(string=rownames(iris.m), pattern = "[a-z]{1,}")
+```
+
+
+## Q1. Perform k-means clustering on iris.m data set using 3 clusters
+```{r Q1}
+km <- kmeans(x = iris.m, centers = 3)
+```
+
+
+## Q2a. Using the results of k-means clustering: Determine a confusion matrix of species / cluster.
+```{r Q2a}
+confusion <- data.frame("species" = speciesLabel, "cluster"= km$cluster)
+
+knitr::kable(x = table(confusion),
+					 caption = "Confusion matrix for k-means.",
+					 booktabs = TRUE, longtable = TRUE) %>%
+kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE) %>%
+kableExtra::row_spec(row = 0, bold = TRUE)
+```
+
+
+## Q2b. Assuming that a cluster 'belongs' to the most popular species in the cluster, what is the accuracy of the classification?
+
+\vspace{3mm}\begin{leftbar}\textsf{\textbf{ANSWER Q2b}\\
+The accuracy for k-means is (50+48+36)/150 = 89.3%
+}\end{leftbar}\vspace{5mm}
+
+## Q3. Perform hierarchical clustering on iris.m.
+```{r Q3}
+iris.m.scaled <- scale(x=iris.m, center = TRUE, scale=TRUE)
+iris.m.scaled.dist <- dist(x = iris.m.scaled, method = "euclidean")
+hc <- hclust(d = iris.m.scaled.dist, method = "complete")
+plot(hc, labels = FALSE)
+rect.hclust(tree=hc, k=3, border = c("red", "green", "blue"))
+```
+
+## Q4a. Using the results of hierarchical clustering: Choose a tree cut point, so that only 3clusters are generated.
+```{r Q4a}
+cut <- cutree(tree = hc, h=5)
+```
+
+## Q4b. Determine a confusion matrix of species / cluster.
+```{r Q4b}
+confusion_4b <- data.frame("species"=speciesLabel, "cluster"=cut)
+
+knitr::kable(x = table(confusion_4b),
+					 caption = "Confusion matrix for hierarchical clustering.",
+					 booktabs = TRUE, longtable = TRUE) %>%
+kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE) %>%
+kableExtra::row_spec(row = 0, bold = TRUE)
+```
+
+## Q4c. What is the accuracy of the classification?
+\vspace{3mm}\begin{leftbar}\textsf{\textbf{ANSWER Q4c}\\
+The accuracy for hierarchical clustering is (49+21+48)/150 = 78.7%
+}\end{leftbar}\vspace{5mm}
+
+## Q5. Perform Density-based Clustering (DBSCAN) on iris.m, choosing parameters that result in 3 clusters (you might either seek 3 clusters or (for simplicity) assume that noise is one of the clusters).
+```{r Q5}
+db <- dbscan::dbscan(x=iris.m.scaled.dist, eps = 0.5, minPts = ncol(iris.m.scaled)+1, borderPoints = TRUE)
+```
+
+
+## Q6a.Using results of DBSCAN: Determine a confusion matrix of species/cluster.
+```{r Q6a}
+confusion_6a <- data.frame("species" = speciesLabel, "cluster"=db$cluster)
+
+knitr::kable(x = table(confusion_6a),
+					 caption = "Confusion matrix for DBSCAN.",
+					 booktabs = TRUE, longtable = TRUE) %>%
+kableExtra::kable_styling(latex_options = c("striped"), full_width = FALSE) %>%
+kableExtra::row_spec(row = 0, bold = TRUE)
+```
+
+
+## Q6b. What is the accuracy of the classification?
+\vspace{3mm}\begin{leftbar}\textsf{\textbf{ANSWER Q6b}\\
+The accuracy for DBSCAN is (18+45+39)/150 = 68%
+}\end{leftbar}\vspace{5mm}
+
+
+## Q7. In the absence of the labels (but with knowledge that there are 3 different species), how would you decide which is the best algorithm?
+
+\vspace{3mm}\begin{leftbar}\textsf{\textbf{ANSWER Q7}\\
+I would use k-means clustering, since I know the number of groupings \emph{a priori}.
+}\end{leftbar}\vspace{5mm}
+
